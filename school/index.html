@@ -1,1 +1,304 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Читання на розуміння: Правда чи Неправда</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f9ff; /* Світло-блакитний фон */
+            background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
 
+        /* Анімації для кнопок */
+        .btn-bounce {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+        }
+        .btn-bounce:hover:not(:disabled) {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .btn-bounce:active:not(:disabled) {
+            transform: translateY(2px) scale(0.95);
+        }
+
+        /* Анімація правильної відповіді (зелене світіння і пульсація) */
+        @keyframes correct-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .animate-correct {
+            animation: correct-pulse 0.6s ease-out;
+            background-color: #22c55e !important; /* Tailwind green-500 */
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+
+        /* Анімація неправильної відповіді (трусіння і червоний колір) */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .animate-wrong {
+            animation: shake 0.5s;
+            background-color: #ef4444 !important; /* Tailwind red-500 */
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+
+        /* Згасання тексту питання для плавного переходу */
+        .fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .fade-in {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .disabled-btn {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 p-4 md:p-8 flex flex-col items-center">
+
+    <div class="max-w-4xl w-full">
+        <!-- Заголовок -->
+        <header class="text-center mb-6">
+            <h1 class="text-4xl md:text-5xl font-black text-sky-600 drop-shadow-md mb-2">
+                📖 Читай та Відповідай!
+            </h1>
+            <p class="text-xl md:text-2xl text-sky-800 font-bold">
+                Прочитай текст, а потім зіграй у гру "Правда чи Неправда"
+            </p>
+        </header>
+
+        <!-- Блок з текстом (завжди видимий) -->
+        <section class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border-4 border-sky-200 mb-8 relative overflow-hidden">
+            <!-- Декоративний елемент -->
+            <div class="absolute -top-10 -right-10 text-9xl opacity-10">🏫</div>
+            
+            <p class="text-xl md:text-2xl leading-relaxed text-slate-700 font-medium relative z-10">
+                Сьогодні понеділок, і для Максима почався новий шкільний тиждень. 
+                Він прокинувся о сьомій ранку та швидко поснідав вівсянкою. 
+                Потім хлопець зібрав свій рюкзак, поклавши туди підручники та новий пенал. 
+                На вулиці йшов невеликий дощ, тому тато вирішив відвезти Максима до школи на машині. 
+                Дорогою вони слухали веселу музику і говорили про плани на вихідні. 
+                Біля школи було багато інших автомобілів та учнів. 
+                Максим попрощався з татом і побіг до свого класу на першому поверсі. 
+                Першим уроком була математика, яку хлопчик дуже любив. 
+                Вчителька розказувала нову тему, а Максим уважно слухав. 
+                На перерві він зустрів свого найкращого друга Дениса, і вони разом пішли до шкільної їдальні.
+            </p>
+        </section>
+
+        <!-- Ігрова зона -->
+        <section id="game-area" class="bg-amber-100 rounded-3xl shadow-xl p-6 md:p-10 border-4 border-amber-300 transition-all">
+            
+            <div class="flex justify-between items-center mb-6">
+                <span class="bg-amber-300 text-amber-900 px-4 py-2 rounded-full font-bold text-lg">
+                    Запитання: <span id="question-counter">1</span>/8
+                </span>
+                <span class="bg-green-300 text-green-900 px-4 py-2 rounded-full font-bold text-lg hidden" id="score-display">
+                    Бали: <span id="score-counter">0</span>
+                </span>
+            </div>
+
+            <!-- Контейнер твердження -->
+            <div class="min-h-[120px] flex items-center justify-center mb-8">
+                <h2 id="statement-text" class="text-3xl md:text-4xl font-black text-center text-amber-900 fade-in">
+                    <!-- Текст твердження з'явиться тут -->
+                </h2>
+            </div>
+
+            <!-- Кнопки Правда / Неправда -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="btn-true" onclick="handleAnswer(true)" class="btn-bounce flex-1 bg-green-400 hover:bg-green-500 text-white border-b-8 border-green-600 rounded-2xl py-6 px-8 text-3xl md:text-4xl font-black shadow-lg flex items-center justify-center gap-3">
+                    <span class="text-4xl">✅</span> Правда
+                </button>
+                <button id="btn-false" onclick="handleAnswer(false)" class="btn-bounce flex-1 bg-red-400 hover:bg-red-500 text-white border-b-8 border-red-600 rounded-2xl py-6 px-8 text-3xl md:text-4xl font-black shadow-lg flex items-center justify-center gap-3">
+                    <span class="text-4xl">❌</span> Неправда
+                </button>
+            </div>
+        </section>
+
+        <!-- Фінальний екран (прихований за замовчуванням) -->
+        <section id="end-screen" class="hidden bg-emerald-100 rounded-3xl shadow-xl p-10 border-4 border-emerald-300 text-center animate-fade-in">
+            <div class="text-7xl mb-6">🎉</div>
+            <h2 class="text-5xl md:text-6xl font-black text-emerald-800 mb-4">Молодець!</h2>
+            <p class="text-3xl md:text-4xl font-bold text-emerald-700 mb-10">
+                Ти вгадав <span id="final-score" class="text-5xl text-emerald-900 bg-white px-4 py-1 rounded-2xl mx-2 shadow-inner">0</span> з 8!
+            </p>
+            <button onclick="startGame()" class="btn-bounce bg-blue-500 hover:bg-blue-600 text-white border-b-8 border-blue-700 rounded-2xl py-5 px-10 text-3xl font-black shadow-xl mx-auto inline-block">
+                🔄 Грати знову
+            </button>
+        </section>
+
+    </div>
+
+    <script>
+        // База тверджень
+        const allStatements = [
+            // Правдиві
+            { text: "Максим снідав вівсянкою.", isTrue: true },
+            { text: "Тато відвіз Максима до школи на машині.", isTrue: true },
+            { text: "Клас Максима знаходиться на першому поверсі.", isTrue: true },
+            { text: "Першим уроком була математика.", isTrue: true },
+            // Неправдиві
+            { text: "Максим прокинувся о восьмій ранку.", isTrue: false },
+            { text: "Дорогою до школи вони слухали новини по радіо.", isTrue: false },
+            { text: "На вулиці яскраво світило сонце.", isTrue: false },
+            { text: "На перерві Максим грав у футбол з Денисом.", isTrue: false }
+        ];
+
+        let currentStatements = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isWaiting = false; // Блокування кнопок під час анімації
+
+        // Елементи DOM
+        const gameArea = document.getElementById('game-area');
+        const endScreen = document.getElementById('end-screen');
+        const statementTextElement = document.getElementById('statement-text');
+        const questionCounterElement = document.getElementById('question-counter');
+        const scoreCounterElement = document.getElementById('score-counter');
+        const finalScoreElement = document.getElementById('final-score');
+        const btnTrue = document.getElementById('btn-true');
+        const btnFalse = document.getElementById('btn-false');
+
+        // Функція перемішування масиву (алгоритм Фішера-Єйтса)
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Ініціалізація або перезапуск гри
+        function startGame() {
+            // Скидання змінних
+            currentIndex = 0;
+            score = 0;
+            isWaiting = false;
+            
+            // Перемішування тверджень
+            currentStatements = shuffleArray(allStatements);
+            
+            // Оновлення UI
+            scoreCounterElement.innerText = score;
+            gameArea.classList.remove('hidden');
+            endScreen.classList.add('hidden');
+            
+            // Зняття класів від минулої гри
+            resetButtons();
+            
+            // Показ першого твердження
+            showStatement();
+        }
+
+        // Відображення поточного твердження
+        function showStatement() {
+            const currentItem = currentStatements[currentIndex];
+            
+            // Оновлення лічильника
+            questionCounterElement.innerText = currentIndex + 1;
+            
+            // Анімація появи тексту
+            statementTextElement.classList.remove('fade-out');
+            statementTextElement.classList.add('fade-in');
+            statementTextElement.innerText = currentItem.text;
+
+            resetButtons();
+            isWaiting = false;
+        }
+
+        // Обробка натискання на кнопку
+        function handleAnswer(userChoice) {
+            if (isWaiting) return; // Запобігання подвійним клікам
+            isWaiting = true;
+
+            const currentItem = currentStatements[currentIndex];
+            const isCorrect = (userChoice === currentItem.isTrue);
+            
+            // Вибір натиснутої кнопки
+            const clickedBtn = userChoice ? btnTrue : btnFalse;
+            const otherBtn = userChoice ? btnFalse : btnTrue;
+
+            // Блокування кнопок
+            clickedBtn.classList.add('disabled-btn');
+            otherBtn.classList.add('disabled-btn');
+
+            // Візуальний зворотний зв'язок
+            if (isCorrect) {
+                score++;
+                scoreCounterElement.innerText = score;
+                clickedBtn.classList.add('animate-correct');
+                // Можна додати звук правильної відповіді тут
+            } else {
+                clickedBtn.classList.add('animate-wrong');
+                // Підсвічуємо правильну відповідь
+                otherBtn.classList.add('animate-correct'); 
+            }
+
+            // Затримка 1.5 секунди перед наступним питанням
+            setTimeout(() => {
+                statementTextElement.classList.remove('fade-in');
+                statementTextElement.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 300); // Чекаємо завершення згасання тексту
+                
+            }, 1500);
+        }
+
+        // Перехід до наступного питання або кінця гри
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentStatements.length) {
+                showStatement();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        // Показ фінального екрану
+        function showEndScreen() {
+            gameArea.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalScoreElement.innerText = score;
+
+            // Невелика анімація для фінального тексту залежно від балів
+            if(score === 8) {
+                endScreen.querySelector('h2').innerText = "Бездоганно!";
+            } else if (score >= 5) {
+                endScreen.querySelector('h2').innerText = "Молодець!";
+            } else {
+                endScreen.querySelector('h2').innerText = "Гарна спроба!";
+            }
+        }
+
+        // Скидання візуального стану кнопок
+        function resetButtons() {
+            btnTrue.className = "btn-bounce flex-1 bg-green-400 hover:bg-green-500 text-white border-b-8 border-green-600 rounded-2xl py-6 px-8 text-3xl md:text-4xl font-black shadow-lg flex items-center justify-center gap-3";
+            btnFalse.className = "btn-bounce flex-1 bg-red-400 hover:bg-red-500 text-white border-b-8 border-red-600 rounded-2xl py-6 px-8 text-3xl md:text-4xl font-black shadow-lg flex items-center justify-center gap-3";
+        }
+
+        // Запуск гри при завантаженні сторінки
+        window.onload = startGame;
+    </script>
+</body>
+</html>

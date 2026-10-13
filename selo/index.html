@@ -1,1 +1,320 @@
 
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Читай та Відповідай</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=Rubik:wght@600;700&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+  /* Layout: одна вузька колонка. Угорі заголовок, під ним картка з текстом, під нею жовта картка із запитанням. */
+  :root {
+    --bg: #eaf6fd;
+    --dot: #cfe7f6;
+    --head: #0a6fb7;
+    --head-sub: #0d4f7c;
+    --card: #ffffff;
+    --card-line: #b9e0f5;
+    --ink: #1d3447;
+    --mark: #ffe27a;
+    --mark-ink: #1d3447;
+    --q-bg: #fff3c4;
+    --q-line: #f4c63d;
+    --q-ink: #6a2c00;
+    --pill: #fcd34d;
+    --pill-ink: #6a2c00;
+    --yes: #1f9d55;
+    --yes-edge: #137a3e;
+    --no: #e5484d;
+    --no-edge: #b0292e;
+    --ok-bg: #d9f5e3;
+    --ok-ink: #0f5a2f;
+    --bad-bg: #fde0e1;
+    --bad-ink: #7d1c20;
+    --next: #0a6fb7;
+    --next-edge: #064f85;
+    --dim: #b9c9d4;
+    --font-display: "Rubik", "Nunito", system-ui, sans-serif;
+    --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1b2a; --dot: #1a2f45; --head: #6cc4ff; --head-sub: #a9d8f5;
+      --card: #152638; --card-line: #2b4b69; --ink: #e4eff8;
+      --mark: #6b5710; --mark-ink: #fff3c4;
+      --q-bg: #33290c; --q-line: #b8901f; --q-ink: #ffe9a6;
+      --pill: #b8901f; --pill-ink: #1c1400;
+      --yes: #2eae68; --yes-edge: #1a7d47; --no: #ee5a5f; --no-edge: #b83a3f;
+      --ok-bg: #123a27; --ok-ink: #b9f0d0; --bad-bg: #4a1a1d; --bad-ink: #ffd0d2;
+      --next: #3d97d8; --next-edge: #256ea3; --dim: #3a5169;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1b2a; --dot: #1a2f45; --head: #6cc4ff; --head-sub: #a9d8f5;
+    --card: #152638; --card-line: #2b4b69; --ink: #e4eff8;
+    --mark: #6b5710; --mark-ink: #fff3c4;
+    --q-bg: #33290c; --q-line: #b8901f; --q-ink: #ffe9a6;
+    --pill: #b8901f; --pill-ink: #1c1400;
+    --yes: #2eae68; --yes-edge: #1a7d47; --no: #ee5a5f; --no-edge: #b83a3f;
+    --ok-bg: #123a27; --ok-ink: #b9f0d0; --bad-bg: #4a1a1d; --bad-ink: #ffd0d2;
+    --next: #3d97d8; --next-edge: #256ea3; --dim: #3a5169;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background-color: var(--bg);
+    background-image: radial-gradient(var(--dot) 1.4px, transparent 1.6px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.65;
+    padding-inline: 16px;
+    padding-block: 28px 48px;
+  }
+  .app { max-width: 720px; margin-inline: auto; display: flex; flex-direction: column; gap: 22px; }
+
+  header { text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .title-row svg { width: 44px; height: 44px; flex: none; }
+  h1 {
+    margin: 0; font-family: var(--font-display); font-weight: 700; color: var(--head);
+    font-size: clamp(30px, 6.5vw, 42px); line-height: 1.15; text-wrap: balance;
+  }
+  .sub { margin: 0; color: var(--head-sub); font-weight: 800; font-size: 16px; text-wrap: balance; }
+
+  .story {
+    background: var(--card); border: 3px solid var(--card-line); border-radius: 24px;
+    padding: 22px 26px; box-shadow: 0 6px 0 var(--card-line);
+  }
+  .story-label {
+    margin: 0 0 8px; font-family: var(--font-display); font-weight: 600; font-size: 13px;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--head);
+  }
+  .story p.text { margin: 0; font-size: 18px; text-align: left; }
+  .story .s { border-radius: 6px; padding: 1px 2px; transition: background-color .25s; }
+  .story .s.hit { background: var(--mark); color: var(--mark-ink); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+  .quiz {
+    background: var(--q-bg); border: 3px solid var(--q-line); border-radius: 24px;
+    padding: 24px 26px 28px; box-shadow: 0 6px 0 var(--q-line);
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .pill {
+    background: var(--pill); color: var(--pill-ink); font-weight: 900; font-size: 14px;
+    padding: 4px 14px; border-radius: 999px; font-variant-numeric: tabular-nums;
+  }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--dim); display: block; }
+  .dots i.now { background: var(--q-line); outline: 3px solid var(--pill); outline-offset: 1px; }
+  .dots i.ok { background: var(--yes); }
+  .dots i.bad { background: var(--no); }
+
+  .statement {
+    margin: 0; text-align: center; font-family: var(--font-display); font-weight: 700; color: var(--q-ink);
+    font-size: clamp(22px, 4.6vw, 28px); line-height: 1.3; text-wrap: balance; padding-block: 6px;
+  }
+
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .btn {
+    font: inherit; font-family: var(--font-display); font-weight: 700; font-size: 22px; color: #fff;
+    border: 0; border-radius: 18px; padding: 14px 16px 16px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .08s, box-shadow .08s, opacity .2s;
+  }
+  .btn svg { width: 26px; height: 26px; flex: none; }
+  .btn.yes { background: var(--yes); box-shadow: 0 6px 0 var(--yes-edge); }
+  .btn.no { background: var(--no); box-shadow: 0 6px 0 var(--no-edge); }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .btn:focus-visible { outline: 4px solid var(--head); outline-offset: 3px; }
+  .btn:disabled { cursor: default; }
+  .btn.faded { opacity: .45; }
+  .btn.picked { outline: 4px solid var(--q-ink); outline-offset: 3px; }
+
+  .feedback { border-radius: 18px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .feedback.ok { background: var(--ok-bg); color: var(--ok-ink); }
+  .feedback.bad { background: var(--bad-bg); color: var(--bad-ink); }
+  .feedback strong { font-family: var(--font-display); font-size: 21px; display: block; }
+  .feedback p { margin: 0; font-size: 17px; font-weight: 700; }
+  .next {
+    align-self: flex-end; font-family: var(--font-display); font-weight: 700; font-size: 18px; color: #fff;
+    background: var(--next); box-shadow: 0 5px 0 var(--next-edge); border: 0; border-radius: 14px;
+    padding: 10px 22px 12px; cursor: pointer;
+  }
+  .next:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .next:focus-visible { outline: 4px solid var(--head); outline-offset: 3px; }
+
+  .result { text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; padding-block: 6px; }
+  .stars { display: flex; gap: 6px; }
+  .stars svg { width: 38px; height: 38px; }
+  .score { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 7vw, 42px); color: var(--q-ink); line-height: 1.1; }
+  .score small { font-size: .55em; font-weight: 600; }
+  .verdict { margin: 0; font-weight: 800; font-size: 19px; color: var(--q-ink); text-wrap: balance; }
+
+  .pop { animation: pop .28s ease-out; }
+  @keyframes pop { from { transform: scale(.97); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .pop { animation: none; } .btn, .story .s { transition: none; } }
+
+  @media (max-width: 480px) {
+    .story, .quiz { padding-inline: 18px; border-radius: 20px; }
+    .story p.text { font-size: 17px; }
+    .answers { gap: 12px; }
+    .btn { font-size: 19px; gap: 6px; padding-inline: 8px; }
+    .btn svg { width: 22px; height: 22px; }
+  }
+</style>
+
+<main class="app">
+  <header>
+    <div class="title-row">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 12c-4-3-10-4-17-3v26c7-1 13 0 17 3 4-3 10-4 17-3V9c-7-1-13 0-17 3z" fill="var(--card)" stroke="var(--head)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M24 12v26" stroke="var(--head)" stroke-width="3"/>
+        <path d="M12 18c3-.4 6 0 9 1.2M12 24c3-.4 6 0 9 1.2M27 19.2c3-1.200 6-1.600 9-1.200M27 25.2c3-1.200 6-1.600 9-1.200" stroke="var(--card-line)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      </svg>
+      <h1>Читай та Відповідай!</h1>
+    </div>
+    <p class="sub">Прочитай текст, а потім зіграй у гру «Правда чи Брехня»</p>
+  </header>
+
+  <section class="story" aria-labelledby="story-label">
+    <p class="story-label" id="story-label">Субота у бабусі</p>
+    <p class="text" id="story"></p>
+  </section>
+
+  <section class="quiz" id="quiz" aria-live="polite"></section>
+</main>
+
+<script>
+  var SENTENCES = [
+    "У суботу Соломія з мамою поїхали до бабусі в село.",
+    "Дівчинка прокинулась дуже рано, бо хотіла встигнути на автобус о дев’ятій годині.",
+    "У сумку вона поклала яблука, цікаву книжку та маленького м’якого зайчика.",
+    "Дорогою за вікном вона бачила золоті поля і великі стоги сіна.",
+    "Бабуся зустріла їх біля хвіртки й міцно обійняла обох.",
+    "У дворі гуляв пухнастий рудий кіт на ім’я Мурко.",
+    "Разом з бабусею Соломія спекла пироги з вишнями.",
+    "Після обіду дівчинка допомагала збирати в саду червоні помідори.",
+    "Увечері вони пили чай з м’ятою та дивилися на зірки."
+  ];
+
+  // s: номер речення в тексті, a: правильна відповідь
+  var QUESTIONS = [
+    { t: "Соломія поїхала до бабусі разом з мамою.", a: true,  s: 0, why: "У тексті сказано: Соломія з мамою поїхали до бабусі." },
+    { t: "Соломія прокинулась пізно.",                a: false, s: 1, why: "Дівчинка прокинулась дуже рано." },
+    { t: "Автобус відправлявся о десятій годині.",    a: false, s: 1, why: "Автобус був о дев’ятій годині." },
+    { t: "У сумку Соломія поклала яблука, книжку та м’якого зайчика.", a: true, s: 2, why: "Так, у сумці були яблука, книжка і зайчик." },
+    { t: "Бабуся зустріла Соломію біля хвіртки.",     a: true,  s: 4, why: "Бабуся чекала біля хвіртки й обійняла гостей." },
+    { t: "Бабусиного кота звали Бровко.",             a: false, s: 5, why: "Кота звали Мурко." },
+    { t: "Соломія й бабуся спекли пироги з яблуками.",a: false, s: 6, why: "Пироги були з вишнями, а не з яблуками." },
+    { t: "Увечері вони пили чай з м’ятою.",           a: true,  s: 8, why: "Так, увечері був чай з м’ятою." }
+  ];
+
+  var storyEl = document.getElementById("story");
+  var quizEl = document.getElementById("quiz");
+  var idx = 0, score = 0, results = [];
+
+  storyEl.innerHTML = SENTENCES.map(function (s, i) {
+    return '<span class="s" data-i="' + i + '">' + s + '</span>';
+  }).join(" ");
+
+  var ICON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_NO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg>';
+  var STAR = function (on) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.2l-5.7 3.1 1.1-6.3L2.8 9.5l6.4-.9z" fill="' + (on ? "#f4b400" : "var(--dim)") + '" stroke="' + (on ? "#c88a00" : "var(--dim)") + '" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  };
+
+  function clearMarks() {
+    storyEl.querySelectorAll(".s.hit").forEach(function (n) { n.classList.remove("hit"); });
+  }
+
+  function dotsHtml() {
+    return QUESTIONS.map(function (_, i) {
+      var c = i < results.length ? (results[i] ? "ok" : "bad") : (i === idx ? "now" : "");
+      return '<i class="' + c + '"></i>';
+    }).join("");
+  }
+
+  function showQuestion() {
+    clearMarks();
+    var q = QUESTIONS[idx];
+    quizEl.innerHTML =
+      '<div class="meta"><span class="pill">Запитання: ' + (idx + 1) + '/' + QUESTIONS.length + '</span>' +
+      '<div class="dots" aria-hidden="true">' + dotsHtml() + '</div></div>' +
+      '<p class="statement pop">' + q.t + '</p>' +
+      '<div class="answers">' +
+        '<button type="button" class="btn yes" id="btn-yes">' + ICON_OK + 'Правда</button>' +
+        '<button type="button" class="btn no" id="btn-no">' + ICON_NO + 'Брехня</button>' +
+      '</div>' +
+      '<div id="fb"></div>';
+    document.getElementById("btn-yes").addEventListener("click", function () { answer(true); });
+    document.getElementById("btn-no").addEventListener("click", function () { answer(false); });
+  }
+
+  function answer(choice) {
+    var q = QUESTIONS[idx];
+    var right = choice === q.a;
+    if (right) score++;
+    results.push(right);
+
+    var yes = document.getElementById("btn-yes"), no = document.getElementById("btn-no");
+    yes.disabled = no.disabled = true;
+    var picked = choice ? yes : no, other = choice ? no : yes;
+    picked.classList.add("picked");
+    other.classList.add("faded");
+
+    var mark = storyEl.querySelector('.s[data-i="' + q.s + '"]');
+    if (mark) mark.classList.add("hit");
+
+    var last = idx === QUESTIONS.length - 1;
+    var fb = document.getElementById("fb");
+    fb.innerHTML =
+      '<div class="feedback pop ' + (right ? "ok" : "bad") + '">' +
+        '<strong>' + (right ? "Правильно! Молодець!" : "Ой, не зовсім. Подивись на виділене речення.") + '</strong>' +
+        '<p>' + q.why + '</p>' +
+        '<button type="button" class="next" id="next">' + (last ? "Показати результат" : "Далі") + '</button>' +
+      '</div>';
+    var next = document.getElementById("next");
+    next.addEventListener("click", function () {
+      idx++;
+      if (idx < QUESTIONS.length) showQuestion(); else showResult();
+    });
+    next.focus({ preventScroll: true });
+    var dots = quizEl.querySelector(".dots");
+    if (dots) dots.innerHTML = dotsHtml();
+  }
+
+  function verdictFor(n) {
+    if (n === 8) return "Відмінно! Ти уважно прочитав текст і не помилився жодного разу.";
+    if (n >= 6) return "Дуже добре! Ще раз прочитай текст і спробуй без помилок.";
+    if (n >= 4) return "Непогано! Перечитай текст уважніше та зіграй ще раз.";
+    return "Не засмучуйся! Прочитай текст ще раз і спробуй знову.";
+  }
+
+  function showResult() {
+    clearMarks();
+    var stars = Math.round(score / QUESTIONS.length * 3);
+    var starHtml = "";
+    for (var i = 0; i < 3; i++) starHtml += STAR(i < stars);
+    quizEl.innerHTML =
+      '<div class="result pop">' +
+        '<div class="stars" aria-hidden="true">' + starHtml + '</div>' +
+        '<p class="score">' + score + ' <small>з</small> ' + QUESTIONS.length + '</p>' +
+        '<p class="verdict">' + verdictFor(score) + '</p>' +
+        '<button type="button" class="next" id="again">Зіграти ще раз</button>' +
+      '</div>';
+    var again = document.getElementById("again");
+    again.style.alignSelf = "center";
+    again.addEventListener("click", function () {
+      idx = 0; score = 0; results = [];
+      showQuestion();
+    });
+  }
+
+  showQuestion();
+</script>
+
+</body></html>

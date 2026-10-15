@@ -1,1 +1,563 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Читай та Відповідай 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+  /* Layout: один блок-картка на весь екран ноутбука. Зліва плеєр і текст із полями, справа запитання (з'являються після перевірки слів). */
+  :root {
+    color-scheme: light;
+    --bg: #eef1f0;
+    --card: #fbfcfb;
+    --line: #d8e0df;
+    --ink: #25343b;
+    --ink-soft: #5b6e76;
+    --accent: #4a7184;
+    --accent-strong: #3a5a6a;
+    --on-accent: #ffffff;
+    --accent-soft: #e4edf0;
+    --panel: #f6f4ee;
+    --panel-line: #e6e1d3;
+    --mark: #efe5c2;
+    --mark-ink: #25343b;
+    --ok: #4f8062;
+    --ok-bg: #e1eee5;
+    --ok-ink: #2f5a40;
+    --bad: #a95f5f;
+    --bad-bg: #f5e3e0;
+    --bad-ink: #7a3b38;
+    --warn: #c9a24d;
+    --warn-bg: #f6ecd2;
+    --warn-ink: #6d5418;
+    --dim: #cfd8d7;
+    --gap-bg: #eef4f6;
+    --star: #d4a64a;
+    --font: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151c20; --card: #1d272c; --line: #2f3d43; --ink: #e3ebec; --ink-soft: #9fb2b8;
+      --accent: #7fa8bb; --accent-strong: #a3c4d3; --on-accent: #10191d; --accent-soft: #263540;
+      --panel: #222a2b; --panel-line: #343e3d; --mark: #4a4326; --mark-ink: #f1e8c8;
+      --ok-bg: #1f3629; --ok-ink: #bfe3cc; --bad-bg: #3b2422; --bad-ink: #f1cbc8;
+      --warn-bg: #3a3118; --warn-ink: #efd99a; --dim: #3a484e; --gap-bg: #25333a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151c20; --card: #1d272c; --line: #2f3d43; --ink: #e3ebec; --ink-soft: #9fb2b8;
+    --accent: #7fa8bb; --accent-strong: #a3c4d3; --on-accent: #10191d; --accent-soft: #263540;
+    --panel: #222a2b; --panel-line: #343e3d; --mark: #4a4326; --mark-ink: #f1e8c8;
+    --ok-bg: #1f3629; --ok-ink: #bfe3cc; --bad-bg: #3b2422; --bad-ink: #f1cbc8;
+    --warn-bg: #3a3118; --warn-ink: #efd99a; --dim: #3a484e; --gap-bg: #25333a;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { height: 100%; }
+  body {
+    margin: 0; min-height: 100%;
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 17px; line-height: 1.6;
+    padding-inline: 16px; padding-block: 20px 32px;
+  }
+  .app { max-width: 1280px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+
+  header { display: flex; align-items: center; gap: 8px 18px; flex-wrap: wrap; }
+  .title-row { display: flex; align-items: center; gap: 10px; }
+  .title-row svg { width: 30px; height: 30px; flex: none; }
+  h1 { margin: 0; font-weight: 800; font-size: 26px; line-height: 1.2; color: var(--ink); }
+  .sub { margin: 0; color: var(--ink-soft); font-weight: 700; font-size: 15px; }
+
+  /* Єдиний блок завдання */
+  .task {
+    background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(37, 52, 59, .06);
+    display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); overflow: hidden;
+  }
+  .left { padding: 12px 22px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .right { background: var(--panel); border-left: 1px solid var(--panel-line); padding: 14px 22px 16px; display: flex; flex-direction: column; min-width: 0; }
+
+  .story-label { margin: 0; font-weight: 800; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+
+  /* Аудіоплеєр в один рядок */
+  .player { background: var(--accent-soft); border-radius: 14px; padding: 6px 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .play {
+    flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--accent); color: var(--on-accent); display: grid; place-items: center;
+    transition: background-color .15s;
+  }
+  .play:hover { background: var(--accent-strong); }
+  .play svg { width: 20px; height: 20px; }
+  .seek-wrap { flex: 1 1 180px; min-width: 0; display: flex; align-items: center; gap: 8px; }
+  #seek { flex: 1; min-width: 0; margin: 0; accent-color: var(--accent); height: 20px; cursor: pointer; }
+  #seek:disabled { cursor: default; opacity: .5; }
+  .time { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+  .chips { display: flex; gap: 6px; }
+  .chip {
+    font: inherit; font-weight: 700; font-size: 13.5px; color: var(--accent-strong); background: var(--card);
+    border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; cursor: pointer; white-space: nowrap;
+  }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .player-error { flex-basis: 100%; margin: 0; font-size: 14px; font-weight: 700; color: var(--bad-ink); background: var(--bad-bg); border-radius: 10px; padding: 6px 10px; }
+  .play:focus-visible, .chip:focus-visible, .ghost:focus-visible, .gap:focus-visible, #seek:focus-visible, .next:focus-visible, .btn:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+
+  /* Текст із полями */
+  .text { margin: 0; font-size: clamp(14px, 2vh, 18px); line-height: 2.34; }
+  .text .s { border-radius: 6px; padding: 1px 2px; transition: background-color .25s; }
+  .text .s.hit { background: var(--mark); color: var(--mark-ink); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .gap {
+    font: inherit; font-weight: 800; color: var(--ink); text-align: center;
+    background: var(--gap-bg); border: 0; border-bottom: 2px dashed var(--accent);
+    border-radius: 6px 6px 0 0; padding: 0 4px; height: 1.65em; margin-inline: 2px; vertical-align: baseline; min-width: 3.2em;
+  }
+  .gap::placeholder { color: var(--accent); opacity: .6; font-weight: 700; }
+  .gap.ok { background: var(--ok-bg); color: var(--ok-ink); border-bottom: 2px solid var(--ok); }
+  .gap.bad { background: var(--bad-bg); color: var(--bad-ink); border-bottom: 2px solid var(--bad); }
+  .gap.empty { background: var(--warn-bg); border-bottom: 2px dashed var(--warn); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: auto; }
+  .next {
+    font: inherit; font-weight: 800; font-size: 16px; color: var(--on-accent); background: var(--accent);
+    border: 0; border-radius: 10px; padding: 8px 20px; cursor: pointer; transition: background-color .15s;
+  }
+  .next:hover { background: var(--accent-strong); }
+  .ghost {
+    font: inherit; font-weight: 700; font-size: 15px; color: var(--accent-strong); background: transparent;
+    border: 1px solid var(--line); border-radius: 10px; padding: 7px 14px; cursor: pointer;
+  }
+  .ghost:hover { background: var(--accent-soft); }
+  .count { font-weight: 700; font-size: 14.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; margin-left: auto; }
+  .check-msg { margin: 0; border-radius: 10px; padding: 6px 12px; font-weight: 700; font-size: 14.5px; line-height: 1.4; }
+  .check-msg.ok { background: var(--ok-bg); color: var(--ok-ink); }
+  .check-msg.bad { background: var(--bad-bg); color: var(--bad-ink); }
+  .check-msg.warn { background: var(--warn-bg); color: var(--warn-ink); }
+
+  /* Права частина: очікування і запитання */
+  .wait { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; color: var(--ink-soft); font-weight: 700; padding-inline: 8px; }
+  .wait svg { width: 44px; height: 44px; opacity: .55; }
+  .wait p { margin: 0; max-width: 28ch; font-size: 16px; text-wrap: balance; }
+  .quiz { display: flex; flex-direction: column; gap: 16px; }
+  .meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .pill { background: var(--card); border: 1px solid var(--panel-line); color: var(--ink-soft); font-weight: 800; font-size: 13.5px; padding: 2px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--dim); display: block; }
+  .dots i.now { background: var(--accent); }
+  .dots i.ok { background: var(--ok); }
+  .dots i.bad { background: var(--bad); }
+  .statement { margin: 0; text-align: center; font-weight: 800; color: var(--ink); font-size: clamp(18px, 3.1vh, 25px); line-height: 1.35; text-wrap: balance; padding-block: 4px; }
+
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn {
+    font: inherit; font-weight: 800; font-size: 18px; color: #fff; border: 0; border-radius: 12px; padding: 11px 12px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: filter .15s, opacity .2s;
+  }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn.yes { background: var(--ok); }
+  .btn.no { background: var(--bad); }
+  .btn:hover:not(:disabled) { filter: brightness(.93); }
+  .btn:disabled { cursor: default; }
+  .btn.faded { opacity: .4; }
+  .btn.picked { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .feedback { border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .feedback.ok { background: var(--ok-bg); color: var(--ok-ink); }
+  .feedback.bad { background: var(--bad-bg); color: var(--bad-ink); }
+  .feedback strong { font-size: 17px; display: block; }
+  .feedback p { margin: 0; font-size: 15.5px; font-weight: 700; }
+  .feedback .next { align-self: flex-end; }
+
+  .result { text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; padding-block: 8px; }
+  .stars { display: flex; gap: 6px; }
+  .stars svg { width: 34px; height: 34px; }
+  .score { margin: 0; font-weight: 800; font-size: 34px; color: var(--ink); line-height: 1.1; }
+  .score small { font-size: .55em; font-weight: 700; }
+  .verdict { margin: 0; font-weight: 700; font-size: 17px; color: var(--ink-soft); text-wrap: balance; }
+
+  .pop { animation: pop .25s ease-out; }
+  @keyframes pop { from { transform: translateY(4px); opacity: .3; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .pop { animation: none; } .btn, .play, .next, .text .s { transition: none; } }
+
+  /* Ноутбук: блок завдання займає близько 70% висоти екрана і стоїть по центру. Заголовок у верхньому рядку сітки. */
+  @media (min-width: 901px) and (min-height: 480px) {
+    body { height: 100%; overflow: hidden; padding-block: 12px; }
+    .app { height: 100%; display: grid; grid-template-rows: 1fr auto 1fr; gap: 0; }
+    header { align-self: start; justify-content: center; }
+    .task { grid-row: 2; height: max(70dvh, 440px); }
+    .left, .right { min-height: 0; overflow-y: auto; }
+  }
+  /* Вузький екран: колонки одна під одною */
+  @media (max-width: 900px) {
+    .task { grid-template-columns: minmax(0, 1fr); }
+    .right { border-left: 0; border-top: 1px solid var(--panel-line); }
+    .wait { padding-block: 18px; }
+    .count { margin-left: 0; }
+  }
+  @media (max-width: 480px) {
+    .left, .right { padding-inline: 16px; }
+    h1 { font-size: 22px; }
+    .text { font-size: 16.5px; }
+    .btn { font-size: 16.5px; padding-inline: 6px; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="title-row">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 12c-4-3-10-4-17-3v26c7-1 13 0 17 3 4-3 10-4 17-3V9c-7-1-13 0-17 3z" fill="var(--card)" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M24 12v26" stroke="var(--accent)" stroke-width="3"/>
+      </svg>
+      <h1>Читай та Відповідай</h1>
+    </div>
+    <p class="sub">Послухай запис, впиши пропущені слова, а потім дай відповіді на запитання.</p>
+  </header>
+
+  <section class="task" aria-label="Завдання">
+    <div class="left">
+      <p class="story-label">Прогулянка в лісі</p>
+
+      <div class="player" role="group" aria-label="Аудіоплеєр">
+        <audio id="audio" preload="metadata" src="audio/lis.mp3"></audio>
+        <button type="button" class="play" id="play" aria-label="Увімкнути запис">
+          <svg viewBox="0 0 24 24" aria-hidden="true" id="icon-play"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true" id="icon-pause" hidden><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z" fill="currentColor"/></svg>
+        </button>
+        <div class="seek-wrap">
+          <input type="range" id="seek" min="0" max="0" step="0.1" value="0" disabled aria-label="Місце в записі">
+          <span class="time"><span id="t-now">0:00</span> / <span id="t-all">0:00</span></span>
+        </div>
+        <div class="chips">
+          <button type="button" class="chip" id="back">⟲ 5 с</button>
+          <button type="button" class="chip" id="speed-slow" aria-pressed="false">Повільно</button>
+          <button type="button" class="chip" id="speed-norm" aria-pressed="true">Звичайно</button>
+        </div>
+        <p class="player-error" id="audio-error" hidden>Не вдалося відкрити файл audio/lis.mp3. Поклади mp3-файл у папку audio поруч із цією сторінкою.</p>
+      </div>
+
+      <p class="text" id="story"></p>
+
+      <p class="check-msg" id="check-msg" role="status" hidden></p>
+      <div class="actions">
+        <button type="button" class="next" id="check">Перевірити слова</button>
+        <button type="button" class="ghost" id="clear">Почати знову</button>
+        <span class="count" id="count" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="wait" id="quiz-wait">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="19" fill="none" stroke="var(--ink-soft)" stroke-width="3"/><path d="M18.500 19c0-3.200 2.400-5 5.500-5s5.500 1.800 5.500 4.800c0 4.200-5.500 4.200-5.500 8.200" fill="none" stroke="var(--ink-soft)" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="34.500" r="1.800" fill="var(--ink-soft)"/></svg>
+        <p>Запитання з’являться тут, коли ти впишеш усі слова й натиснеш «Перевірити слова».</p>
+      </div>
+      <div class="quiz" id="quiz" aria-live="polite" hidden></div>
+    </div>
+  </section>
+</main>
+
+<script>
+var SENTENCES = [
+  "У [неділю] Оля, її брат Ілько та тато пішли гуляти до осіннього [лісу].",
+  "Було прохолодно, тому діти вдягнули теплі [куртки] й гумові [чоботи].",
+  "Тато взяв із собою [термос] з гарячим чаєм та кошик для [грибів].",
+  "На стежці вони побачили [білку], яка швидко побігла на високу [сосну].",
+  "Ілько знайшов під [дубом] великий гриб і дуже зрадів.",
+  "Оля зібрала [букет] із жовтого та червоного листя клена.",
+  "Біля маленького [озера] вони зупинилися й пообідали канапками, тобто бутербродами.",
+  "Коли почало сутеніти, вся [родина] повернулася додому.",
+  "Мама чекала на них удома з теплою вечерею."
+];
+var QUESTIONS = [
+  {
+    "t": "Оля пішла до лісу з братом і татом.",
+    "a": true,
+    "s": 0,
+    "why": "У тексті сказано: Оля, її брат Ілько та тато пішли до лісу."
+  },
+  {
+    "t": "Прогулянка була у суботу.",
+    "a": false,
+    "s": 0,
+    "why": "Вони пішли гуляти у неділю."
+  },
+  {
+    "t": "Діти вдягнули гумові чоботи.",
+    "a": true,
+    "s": 1,
+    "why": "Так, було прохолодно, і діти вдягнули теплі куртки й гумові чоботи."
+  },
+  {
+    "t": "У термосі був холодний сік.",
+    "a": false,
+    "s": 2,
+    "why": "У термосі був гарячий чай."
+  },
+  {
+    "t": "Білка побігла на березу.",
+    "a": false,
+    "s": 3,
+    "why": "Білка побігла на високу сосну."
+  },
+  {
+    "t": "Ілько знайшов гриб під дубом.",
+    "a": true,
+    "s": 4,
+    "why": "Так, під дубом Ілько знайшов великий гриб."
+  },
+  {
+    "t": "Оля зібрала букет із листя клена.",
+    "a": true,
+    "s": 5,
+    "why": "Так, це був букет із жовтого та червоного листя клена."
+  },
+  {
+    "t": "Обідали вони біля річки.",
+    "a": false,
+    "s": 6,
+    "why": "Вони пообідали біля маленького озера."
+  }
+];
+
+var storyEl = document.getElementById("story");
+var quizEl = document.getElementById("quiz");
+var waitEl = document.getElementById("quiz-wait");
+var idx = 0, score = 0, results = [], started = false;
+
+/* ---------- Текст із полями ---------- */
+var GAP_TOTAL = 0;
+storyEl.innerHTML = SENTENCES.map(function (s, i) {
+  var html = s.replace(/\[([^\]]+)\]/g, function (_, word) {
+    GAP_TOTAL++;
+    var width = Math.max(3.2, word.length * 0.6 + 1.3).toFixed(1);
+    return '<input type="text" class="gap" data-word="' + word + '" style="width:' + width + 'em" ' +
+      'autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" lang="uk" ' +
+      'aria-label="Пропущене слово ' + GAP_TOTAL + '" placeholder="' + GAP_TOTAL + '">';
+  });
+  return '<span class="s" data-i="' + i + '">' + html + '</span>';
+}).join(" ");
+
+var gaps = Array.prototype.slice.call(storyEl.querySelectorAll(".gap"));
+var checkMsg = document.getElementById("check-msg");
+var countEl = document.getElementById("count");
+
+function norm(v) {
+  return v.trim().toLowerCase().replace(/[ʼ'`’]/g, "’").replace(/\s+/g, " ");
+}
+function filled() { return gaps.filter(function (g) { return g.value.trim() !== ""; }).length; }
+function updateCount() { countEl.textContent = "Заповнено: " + filled() + " з " + gaps.length; }
+function showMsg(kind, text) {
+  checkMsg.hidden = false;
+  checkMsg.className = "check-msg " + kind + " pop";
+  checkMsg.textContent = text;
+}
+function hideMsg() { checkMsg.hidden = true; }
+updateCount();
+
+gaps.forEach(function (g, i) {
+  g.addEventListener("input", function () {
+    g.classList.remove("ok", "bad", "empty");
+    hideMsg();
+    updateCount();
+  });
+  g.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (i < gaps.length - 1) gaps[i + 1].focus(); else checkWords();
+  });
+});
+
+function checkWords() {
+  gaps.forEach(function (g) { g.classList.remove("ok", "bad", "empty"); });
+  var empty = gaps.filter(function (g) { return g.value.trim() === ""; });
+  if (empty.length) {
+    empty.forEach(function (g) { g.classList.add("empty"); });
+    showMsg("warn", "Спочатку впиши всі слова. Порожніх полів: " + empty.length + ".");
+    empty[0].focus();
+    return;
+  }
+  var right = 0;
+  gaps.forEach(function (g) {
+    var good = norm(g.value) === norm(g.dataset.word);
+    g.classList.add(good ? "ok" : "bad");
+    if (good) right++;
+  });
+  if (right === gaps.length) {
+    showMsg("ok", "Чудово! Усі " + gaps.length + " слів написано правильно.");
+  } else {
+    showMsg("bad", "Правильно: " + right + " з " + gaps.length + ". Слова, підкреслені червоним, можна виправити й перевірити ще раз.");
+  }
+  revealQuiz();
+}
+function revealQuiz() {
+  if (started) return;
+  started = true;
+  waitEl.hidden = true;
+  quizEl.hidden = false;
+  idx = 0; score = 0; results = [];
+  showQuestion();
+}
+document.getElementById("check").addEventListener("click", checkWords);
+document.getElementById("clear").addEventListener("click", function () {
+  gaps.forEach(function (g) { g.value = ""; g.classList.remove("ok", "bad", "empty"); });
+  hideMsg(); updateCount(); clearMarks();
+  started = false; quizEl.hidden = true; quizEl.innerHTML = ""; waitEl.hidden = false;
+  if (gaps[0]) gaps[0].focus();
+});
+
+/* ---------- Аудіоплеєр ---------- */
+(function () {
+  var audio = document.getElementById("audio");
+  var playBtn = document.getElementById("play");
+  var iconPlay = document.getElementById("icon-play");
+  var iconPause = document.getElementById("icon-pause");
+  var seek = document.getElementById("seek");
+  var tNow = document.getElementById("t-now");
+  var tAll = document.getElementById("t-all");
+  var slow = document.getElementById("speed-slow");
+  var norm1 = document.getElementById("speed-norm");
+  var err = document.getElementById("audio-error");
+
+  function fmt(t) {
+    if (!isFinite(t)) t = 0;
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  function setPlaying(on) {
+    iconPlay.hidden = on; iconPause.hidden = !on;
+    playBtn.setAttribute("aria-label", on ? "Пауза" : "Увімкнути запис");
+  }
+  function onMeta() {
+    seek.max = audio.duration; seek.disabled = false; tAll.textContent = fmt(audio.duration);
+    err.hidden = true;
+  }
+  function onError() { err.hidden = false; seek.disabled = true; }
+  audio.addEventListener("loadedmetadata", onMeta);
+  audio.addEventListener("timeupdate", function () {
+    seek.value = audio.currentTime; tNow.textContent = fmt(audio.currentTime);
+  });
+  audio.addEventListener("play", function () { setPlaying(true); });
+  audio.addEventListener("pause", function () { setPlaying(false); });
+  audio.addEventListener("ended", function () { setPlaying(false); audio.currentTime = 0; });
+  audio.addEventListener("error", onError);
+  /* Файл міг завантажитись або не знайтись ще до того, як підключено події */
+  if (audio.readyState >= 1) onMeta();
+  else if (audio.error || audio.networkState === 3) onError();
+
+  playBtn.addEventListener("click", function () {
+    if (audio.paused) {
+      var p = audio.play();
+      if (p && p.catch) p.catch(function () { err.hidden = false; });
+    } else { audio.pause(); }
+  });
+  seek.addEventListener("input", function () { audio.currentTime = parseFloat(seek.value); });
+  document.getElementById("back").addEventListener("click", function () {
+    audio.currentTime = Math.max(0, audio.currentTime - 5);
+  });
+  function setSpeed(v) {
+    audio.playbackRate = v;
+    slow.setAttribute("aria-pressed", v < 1 ? "true" : "false");
+    norm1.setAttribute("aria-pressed", v < 1 ? "false" : "true");
+  }
+  slow.addEventListener("click", function () { setSpeed(0.8); });
+  norm1.addEventListener("click", function () { setSpeed(1); });
+})();
+
+/* ---------- Запитання «Правда чи Брехня» ---------- */
+var ICON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var ICON_NO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
+var STAR = function (on) {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.2l-5.7 3.1 1.1-6.3L2.8 9.5l6.4-.9z" fill="' + (on ? "var(--star)" : "var(--dim)") + '" stroke="' + (on ? "var(--star)" : "var(--dim)") + '" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+};
+
+function clearMarks() {
+  storyEl.querySelectorAll(".s.hit").forEach(function (n) { n.classList.remove("hit"); });
+}
+function dotsHtml() {
+  return QUESTIONS.map(function (_, i) {
+    var c = i < results.length ? (results[i] ? "ok" : "bad") : (i === idx ? "now" : "");
+    return '<i class="' + c + '"></i>';
+  }).join("");
+}
+
+function showQuestion() {
+  clearMarks();
+  var q = QUESTIONS[idx];
+  quizEl.innerHTML =
+    '<div class="meta"><span class="pill">Запитання ' + (idx + 1) + ' з ' + QUESTIONS.length + '</span>' +
+    '<div class="dots" aria-hidden="true">' + dotsHtml() + '</div></div>' +
+    '<p class="statement pop">' + q.t + '</p>' +
+    '<div class="answers">' +
+      '<button type="button" class="btn yes" id="btn-yes">' + ICON_OK + 'Правда</button>' +
+      '<button type="button" class="btn no" id="btn-no">' + ICON_NO + 'Брехня</button>' +
+    '</div>' +
+    '<div id="fb"></div>';
+  document.getElementById("btn-yes").addEventListener("click", function () { answer(true); });
+  document.getElementById("btn-no").addEventListener("click", function () { answer(false); });
+}
+
+function answer(choice) {
+  var q = QUESTIONS[idx];
+  var right = choice === q.a;
+  if (right) score++;
+  results.push(right);
+
+  var yes = document.getElementById("btn-yes"), no = document.getElementById("btn-no");
+  yes.disabled = no.disabled = true;
+  (choice ? yes : no).classList.add("picked");
+  (choice ? no : yes).classList.add("faded");
+
+  var mark = storyEl.querySelector('.s[data-i="' + q.s + '"]');
+  if (mark) mark.classList.add("hit");
+
+  var last = idx === QUESTIONS.length - 1;
+  document.getElementById("fb").innerHTML =
+    '<div class="feedback pop ' + (right ? "ok" : "bad") + '">' +
+      '<strong>' + (right ? "Правильно! Молодець!" : "Не зовсім. Подивись на виділене речення.") + '</strong>' +
+      '<p>' + q.why + '</p>' +
+      '<button type="button" class="next" id="next">' + (last ? "Показати результат" : "Далі") + '</button>' +
+    '</div>';
+  var next = document.getElementById("next");
+  next.addEventListener("click", function () {
+    idx++;
+    if (idx < QUESTIONS.length) showQuestion(); else showResult();
+  });
+  next.focus({ preventScroll: true });
+  quizEl.querySelector(".dots").innerHTML = dotsHtml();
+}
+
+function verdictFor(n) {
+  if (n === QUESTIONS.length) return "Відмінно! Ти уважно слухав і не помилився жодного разу.";
+  if (n >= 6) return "Дуже добре! Послухай запис ще раз і спробуй без помилок.";
+  if (n >= 4) return "Непогано! Послухай уважніше та спробуй ще раз.";
+  return "Не засмучуйся! Послухай запис ще раз і спробуй знову.";
+}
+
+function showResult() {
+  clearMarks();
+  var stars = Math.round(score / QUESTIONS.length * 3);
+  var starHtml = "";
+  for (var i = 0; i < 3; i++) starHtml += STAR(i < stars);
+  quizEl.innerHTML =
+    '<div class="result pop">' +
+      '<div class="stars" aria-hidden="true">' + starHtml + '</div>' +
+      '<p class="score">' + score + ' <small>з</small> ' + QUESTIONS.length + '</p>' +
+      '<p class="verdict">' + verdictFor(score) + '</p>' +
+      '<button type="button" class="next" id="again">Відповісти ще раз</button>' +
+    '</div>';
+  document.getElementById("again").addEventListener("click", function () {
+    idx = 0; score = 0; results = [];
+    showQuestion();
+  });
+}
+</script>
+</body>
+</html>
 
